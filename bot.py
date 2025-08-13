@@ -74,17 +74,17 @@ def run_selenium():
         my_bots = wait.until(EC.element_to_be_clickable((By.XPATH, "//*[contains(text(), 'My bots')]")))
         driver.execute_script("arguments[0].scrollIntoView(true);", my_bots)
         driver.execute_script("arguments[0].click();", my_bots)
-        time.sleep(10)  # Increased delay for dashboard load to address timing issues
+        time.sleep(15)  # Increased delay for dashboard load to 15 seconds
 
-        # Wait for the dashboard to fully load
-        wait.until(EC.presence_of_element_located((By.XPATH, "//*[contains(text(), 'My bots')]")))
+        # Wait for the dashboard banner to ensure full load
+        wait.until(EC.presence_of_element_located((By.XPATH, "//*[contains(text(), 'Get Your Bots Online with the FNLB App')]")))
         time.sleep(3)  # Additional delay for dynamic content
 
         # Retry loop for locating search input
         max_retries = 3
         for attempt in range(max_retries):
             try:
-                search_input = wait.until(EC.presence_of_element_located((By.CSS_SELECTOR, "input[placeholder='Search for a bot.']")))
+                search_input = wait.until(EC.presence_of_element_located((By.XPATH, "//input[contains(@placeholder, 'Search for a bot')]")))
                 break
             except:
                 time.sleep(5)  # Wait 5 seconds before retrying

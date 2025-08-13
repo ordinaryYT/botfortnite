@@ -7,7 +7,8 @@ from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
 import os
 import time
-import uuid  # To generate a unique directory name
+import uuid
+import concurrent.futures
 
 # Define intents
 intents = discord.Intents.default()
@@ -15,21 +16,20 @@ intents.message_content = True  # Enable message content intent
 
 bot = commands.Bot(command_prefix='!', intents=intents)
 
-@bot.command(name='changeoutfit')
-async def change_outfit(ctx):
+def run_selenium():
+    # Generate a unique user data directory
+    user_data_dir = f"/tmp/chrome-profile-{uuid.uuid4()}"
+
+    options = webdriver.ChromeOptions()
+    options.add_argument(f"user-data-dir={user_data_dir}")  # Specify unique user data dir
+    options.add_argument("--headless")  # Run in headless mode for Render
+    options.add_argument("--no-sandbox")  # Required for some environments like Render
+    options.add_argument("--disable-dev-shm-usage")  # Overcome limited resource issues
+
+    driver = webdriver.Chrome(options=options)
+    wait = WebDriverWait(driver, 10)
+
     try:
-        # Generate a unique user data directory
-        user_data_dir = f"/tmp/chrome-profile-{uuid.uuid4()}"
-
-        options = webdriver.ChromeOptions()
-        options.add_argument(f"user-data-dir={user_data_dir}")  # Specify unique user data dir
-        options.add_argument("--headless")  # Run in headless mode for Render
-        options.add_argument("--no-sandbox")  # Required for some environments like Render
-        options.add_argument("--disable-dev-shm-usage")  # Overcome limited resource issues
-
-        driver = webdriver.Chrome(options=options)
-        wait = WebDriverWait(driver, 10)
-
         driver.get("https://app.fnlb.net/")
 
         # Click Login button
@@ -75,13 +75,22 @@ async def change_outfit(ctx):
         chat_input.send_keys("outfit fishstick")
         chat_input.send_keys(Keys.ENTER)
 
-        await ctx.send("The command 'outfit fishstick' has been sent to OGsbot69.")
-
         driver.quit()
+        return True
     except Exception as e:
-        await ctx.send(f"An error occurred: {str(e)}")
         if 'driver' in locals():
             driver.quit()
+        return False
+
+@bot.command(name='changeoutfit')
+async def change_outfit(ctx):
+    await ctx.send("Starting outfit change process...")
+    with concurrent.futures.ThreadPoolExecutor() as executor:
+        success = await bot.loop.run_in_executor(executor, run_selenium)
+    if success:
+        await ctx.send("The command 'outfit fishstick' has been sent to OGsbot69.")
+    else:
+        await ctx.send("An error occurred while processing the outfit change.")
 
 # Use environment variable for bot token
 bot.run(os.getenv('DISCORD_BOT_TOKEN'))

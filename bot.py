@@ -50,7 +50,7 @@ def run_selenium():
     options.add_argument("--disable-gpu")  # Improve rendering in headless mode
 
     driver = webdriver.Chrome(options=options)
-    wait = WebDriverWait(driver, 30)  # Increased timeout to 30 seconds
+    wait = WebDriverWait(driver, 40)  # Increased timeout to 40 seconds
 
     try:
         driver.get("https://app.fnlb.net/")
@@ -78,19 +78,15 @@ def run_selenium():
         my_bots = wait.until(EC.element_to_be_clickable((By.XPATH, "//*[contains(text(), 'My bots')]")))
         driver.execute_script("arguments[0].scrollIntoView(true);", my_bots)
         driver.execute_script("arguments[0].click();", my_bots)
-        time.sleep(5)  # Wait for navigation to https://app.fnlb.net/bots
+        time.sleep(10)  # Increased delay for navigation to stabilize
 
-        # Wait for the new page to load and check URL
-        wait.until(EC.url_to_be("https://app.fnlb.net/bots"))
-        time.sleep(3)  # Additional delay for page to stabilize
+        # Log current URL for debugging
+        logger.info(f"Current URL after My Bots click: {driver.current_url}")
 
-        # Find and force the search input using JavaScript
-        search_input = driver.execute_script("""
-            return document.querySelector("input[placeholder='Search for a bot...']");
-        """)
-        if not search_input:
-            logger.error(f"Page source: {driver.page_source}")
-            raise TimeoutException("Could not find search input with placeholder 'Search for a bot...'")
+        # Wait for the search input to appear
+        search_input = wait.until(EC.presence_of_element_located((By.CSS_SELECTOR, "input[placeholder='Search for a bot...']")))
+        if not search_input.is_displayed():
+            raise TimeoutException("Search input found but not displayed")
 
         # Force search input using JavaScript
         driver.execute_script("arguments[0].value = 'OGsbot69';", search_input)

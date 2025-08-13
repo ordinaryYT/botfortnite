@@ -112,65 +112,71 @@ def run_selenium():
         time.sleep(5)
         take_screenshot(driver, "after_mybots_click")
 
-        # Step 6: Alternative navigation to find the bot
-        logger.info("Attempting to locate OGsbot69...")
-        
-        # Try multiple approaches to find the bot
+        # Step 6: Search for OGsbot69
+        logger.info("Searching for OGsbot69...")
         try:
-            # Approach 1: Try clicking "pub bots 1" directly
+            # Try multiple selector patterns for the search input
+            search_input = wait.until(EC.presence_of_element_located(
+                (By.XPATH, "//input[contains(@placeholder, 'Search') or contains(@placeholder, 'search')]")))
+            
+            search_input.clear()
+            search_input.send_keys("OGsbot69")
+            time.sleep(3)  # Wait for search results
+            take_screenshot(driver, "after_search_input")
+
+            # Step 7: Click on Pub bots 1
+            logger.info("Clicking Pub bots 1...")
             pub_bots = wait.until(EC.element_to_be_clickable(
                 (By.XPATH, "//*[contains(translate(., 'ABCDEFGHIJKLMNOPQRSTUVWXYZ', 'abcdefghijklmnopqrstuvwxyz'), 'pub bots 1')]")))
             driver.execute_script("arguments[0].scrollIntoView(true);", pub_bots)
             driver.execute_script("arguments[0].click();", pub_bots)
             time.sleep(3)
             take_screenshot(driver, "after_pub_bots_click")
-            
-            # Then find OGsbot69
+
+            # Step 8: Click on OGsbot69
+            logger.info("Clicking OGsbot69...")
             ogs_bot = wait.until(EC.element_to_be_clickable(
                 (By.XPATH, "//*[contains(translate(., 'ABCDEFGHIJKLMNOPQRSTUVWXYZ', 'abcdefghijklmnopqrstuvwxyz'), 'ogsbot69')]")))
-        except TimeoutException:
-            # Approach 2: Try finding OGsbot69 directly
-            logger.warning("First approach failed, trying direct bot search")
-            ogs_bot = wait.until(EC.element_to_be_clickable(
-                (By.XPATH, "//*[contains(translate(., 'ABCDEFGHIJKLMNOPQRSTUVWXYZ', 'abcdefghijklmnopqrstuvwxyz'), 'ogsbot69')]")))
+            driver.execute_script("arguments[0].scrollIntoView(true);", ogs_bot)
+            driver.execute_script("arguments[0].click();", ogs_bot)
+            time.sleep(2)
+            take_screenshot(driver, "after_ogsbot_click")
 
-        # Click on the bot
-        driver.execute_script("arguments[0].scrollIntoView(true);", ogs_bot)
-        driver.execute_script("arguments[0].click();", ogs_bot)
-        time.sleep(2)
-        take_screenshot(driver, "after_ogsbot_click")
+            # Step 9: Click Chat button
+            logger.info("Clicking Chat button...")
+            chat_btn = wait.until(EC.element_to_be_clickable(
+                (By.XPATH, "//button[contains(translate(., 'ABCDEFGHIJKLMNOPQRSTUVWXYZ', 'abcdefghijklmnopqrstuvwxyz'), 'chat')]")))
+            driver.execute_script("arguments[0].scrollIntoView(true);", chat_btn)
+            driver.execute_script("arguments[0].click();", chat_btn)
+            time.sleep(2)
+            take_screenshot(driver, "after_chat_click")
 
-        # Step 7: Click Chat button
-        logger.info("Clicking Chat button...")
-        chat_btn = wait.until(EC.element_to_be_clickable(
-            (By.XPATH, "//button[contains(translate(., 'ABCDEFGHIJKLMNOPQRSTUVWXYZ', 'abcdefghijklmnopqrstuvwxyz'), 'chat')]")))
-        driver.execute_script("arguments[0].scrollIntoView(true);", chat_btn)
-        driver.execute_script("arguments[0].click();", chat_btn)
-        time.sleep(2)
-        take_screenshot(driver, "after_chat_click")
+            # Step 10: Send command
+            logger.info("Sending command...")
+            chat_input = wait.until(EC.presence_of_element_located(
+                (By.XPATH, "//input[contains(translate(@placeholder, 'ABCDEFGHIJKLMNOPQRSTUVWXYZ', 'abcdefghijklmnopqrstuvwxyz'), 'run a command')]")))
+            chat_input.send_keys("outfit fishstick")
+            chat_input.send_keys(Keys.ENTER)
+            time.sleep(2)
+            take_screenshot(driver, "after_command_sent")
 
-        # Step 8: Send command
-        logger.info("Sending command...")
-        chat_input = wait.until(EC.presence_of_element_located(
-            (By.XPATH, "//input[contains(translate(@placeholder, 'ABCDEFGHIJKLMNOPQRSTUVWXYZ', 'abcdefghijklmnopqrstuvwxyz'), 'run a command')]")))
-        chat_input.send_keys("outfit fishstick")
-        chat_input.send_keys(Keys.ENTER)
-        time.sleep(2)
-        take_screenshot(driver, "after_command_sent")
+            driver.quit()
+            return True
 
-        driver.quit()
-        return True
+        except TimeoutException as e:
+            logger.error(f"Timeout during search/navigation: {str(e)}")
+            take_screenshot(driver, "search_navigation_timeout")
+            logger.error(f"Current page source:\n{driver.page_source[:2000]}")
+            raise
 
     except Exception as e:
         logger.error(f"Error during execution: {str(e)}\nStacktrace: {traceback.format_exc()}")
         
-        # Capture as much debugging info as possible
         if 'driver' in locals():
             try:
                 logger.error(f"Current URL: {driver.current_url}")
                 logger.error(f"Page title: {driver.title}")
-                take_screenshot(driver, "error_state")
-                logger.error(f"Page source snippet:\n{driver.page_source[:2000]}")
+                take_screenshot(driver, "final_error_state")
             except Exception as debug_error:
                 logger.error(f"Failed to capture debug info: {str(debug_error)}")
             finally:

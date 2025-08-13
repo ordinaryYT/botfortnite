@@ -5,6 +5,7 @@ from selenium.webdriver.common.keys import Keys
 from selenium.webdriver.common.by import By
 from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
+from selenium.webdriver.common.action_chains import ActionChains
 from selenium.common.exceptions import TimeoutException, NoSuchElementException
 import os
 import time
@@ -112,82 +113,77 @@ def run_selenium():
         time.sleep(5)
         take_screenshot(driver, "after_mybots_click")
 
-        # Step 6: Force interaction with search input
-        logger.info("Forcing search input interaction...")
+        # Step 6: BRUTE FORCE SEARCH INTERACTION
+        logger.info("BRUTE FORCE - Clicking search area...")
+        take_screenshot(driver, "before_search_click")
+        
+        # Get window dimensions
+        window_size = driver.get_window_size()
+        center_x = window_size['width'] // 2
+        search_y = window_size['height'] // 3  # Adjust this based on screenshot
+        
+        # Create action chain to move to and click the position
+        actions = ActionChains(driver)
+        actions.move_by_offset(center_x, search_y).click().perform()
+        time.sleep(1)
+        
+        # Try to find input normally first
         try:
-            # Try multiple selector patterns
-            search_input = wait.until(EC.presence_of_element_located(
-                (By.XPATH, "//input[contains(@placeholder, 'Search') or contains(@placeholder, 'search') or @type='search']")))
-            
-            # Force make it visible and interactable
-            driver.execute_script("""
-                arguments[0].style.display = 'block';
-                arguments[0].style.visibility = 'visible';
-                arguments[0].style.opacity = '1';
-                arguments[0].removeAttribute('disabled');
-                arguments[0].removeAttribute('readonly');
-            """, search_input)
-            
-            # Scroll to and click using JavaScript
-            driver.execute_script("arguments[0].scrollIntoView({block: 'center'});", search_input)
-            driver.execute_script("arguments[0].click();", search_input)
-            
-            # Clear and type with delays
+            search_input = driver.find_element(By.XPATH, "//input")
             search_input.clear()
             for char in "OGsbot69":
                 search_input.send_keys(char)
                 time.sleep(0.1)
-            
             time.sleep(2)
-            take_screenshot(driver, "after_search_input")
-
-            # Step 7: Click on Pub bots 1
-            logger.info("Clicking Pub bots 1...")
-            pub_bots = wait.until(EC.element_to_be_clickable(
-                (By.XPATH, "//*[contains(translate(., 'ABCDEFGHIJKLMNOPQRSTUVWXYZ', 'abcdefghijklmnopqrstuvwxyz'), 'pub bots 1')]")))
-            driver.execute_script("arguments[0].scrollIntoView(true);", pub_bots)
-            driver.execute_script("arguments[0].click();", pub_bots)
-            time.sleep(3)
-            take_screenshot(driver, "after_pub_bots_click")
-
-            # Step 8: Click on OGsbot69
-            logger.info("Clicking OGsbot69...")
-            ogs_bot = wait.until(EC.element_to_be_clickable(
-                (By.XPATH, "//*[contains(translate(., 'ABCDEFGHIJKLMNOPQRSTUVWXYZ', 'abcdefghijklmnopqrstuvwxyz'), 'ogsbot69')]")))
-            driver.execute_script("arguments[0].scrollIntoView(true);", ogs_bot)
-            driver.execute_script("arguments[0].click();", ogs_bot)
+        except:
+            # If normal input fails, brute-force typing
+            logger.warning("Normal input failed, brute-force typing...")
+            actions.send_keys("OGsbot69").perform()
             time.sleep(2)
-            take_screenshot(driver, "after_ogsbot_click")
+        
+        take_screenshot(driver, "after_search_input")
 
-            # Step 9: Click Chat button
-            logger.info("Clicking Chat button...")
-            chat_btn = wait.until(EC.element_to_be_clickable(
-                (By.XPATH, "//button[contains(translate(., 'ABCDEFGHIJKLMNOPQRSTUVWXYZ', 'abcdefghijklmnopqrstuvwxyz'), 'chat')]")))
-            driver.execute_script("arguments[0].scrollIntoView(true);", chat_btn)
-            driver.execute_script("arguments[0].click();", chat_btn)
-            time.sleep(2)
-            take_screenshot(driver, "after_chat_click")
+        # Step 7: Click on Pub bots 1
+        logger.info("Clicking Pub bots 1...")
+        pub_bots = wait.until(EC.element_to_be_clickable(
+            (By.XPATH, "//*[contains(translate(., 'ABCDEFGHIJKLMNOPQRSTUVWXYZ', 'abcdefghijklmnopqrstuvwxyz'), 'pub bots 1')]")))
+        driver.execute_script("arguments[0].scrollIntoView(true);", pub_bots)
+        driver.execute_script("arguments[0].click();", pub_bots)
+        time.sleep(3)
+        take_screenshot(driver, "after_pub_bots_click")
 
-            # Step 10: Send command
-            logger.info("Sending command...")
-            chat_input = wait.until(EC.presence_of_element_located(
-                (By.XPATH, "//input[contains(translate(@placeholder, 'ABCDEFGHIJKLMNOPQRSTUVWXYZ', 'abcdefghijklmnopqrstuvwxyz'), 'run a command')]")))
-            chat_input.send_keys("outfit fishstick")
-            chat_input.send_keys(Keys.ENTER)
-            time.sleep(2)
-            take_screenshot(driver, "after_command_sent")
+        # Step 8: Click on OGsbot69
+        logger.info("Clicking OGsbot69...")
+        ogs_bot = wait.until(EC.element_to_be_clickable(
+            (By.XPATH, "//*[contains(translate(., 'ABCDEFGHIJKLMNOPQRSTUVWXYZ', 'abcdefghijklmnopqrstuvwxyz'), 'ogsbot69')]")))
+        driver.execute_script("arguments[0].scrollIntoView(true);", ogs_bot)
+        driver.execute_script("arguments[0].click();", ogs_bot)
+        time.sleep(2)
+        take_screenshot(driver, "after_ogsbot_click")
 
-            driver.quit()
-            return True
+        # Step 9: Click Chat button
+        logger.info("Clicking Chat button...")
+        chat_btn = wait.until(EC.element_to_be_clickable(
+            (By.XPATH, "//button[contains(translate(., 'ABCDEFGHIJKLMNOPQRSTUVWXYZ', 'abcdefghijklmnopqrstuvwxyz'), 'chat')]")))
+        driver.execute_script("arguments[0].scrollIntoView(true);", chat_btn)
+        driver.execute_script("arguments[0].click();", chat_btn)
+        time.sleep(2)
+        take_screenshot(driver, "after_chat_click")
 
-        except Exception as e:
-            logger.error(f"Search interaction failed: {str(e)}")
-            take_screenshot(driver, "search_failed")
-            logger.error(f"Page source snippet:\n{driver.page_source[:2000]}")
-            raise
+        # Step 10: Send command
+        logger.info("Sending command...")
+        chat_input = wait.until(EC.presence_of_element_located(
+            (By.XPATH, "//input[contains(translate(@placeholder, 'ABCDEFGHIJKLMNOPQRSTUVWXYZ', 'abcdefghijklmnopqrstuvwxyz'), 'run a command')]")))
+        chat_input.send_keys("outfit fishstick")
+        chat_input.send_keys(Keys.ENTER)
+        time.sleep(2)
+        take_screenshot(driver, "after_command_sent")
+
+        driver.quit()
+        return True
 
     except Exception as e:
-        logger.error(f"Error during execution: {str(e)}\nStacktrace: {traceback.format_exc()}")
+        logger.error(f"BRUTE FORCE FAILED: {str(e)}\nStacktrace: {traceback.format_exc()}")
         
         if 'driver' in locals():
             try:

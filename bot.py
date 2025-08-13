@@ -47,6 +47,7 @@ def run_selenium():
     options.add_argument("--headless")  # Run in headless mode for Render
     options.add_argument("--no-sandbox")  # Required for some environments like Render
     options.add_argument("--disable-dev-shm-usage")  # Overcome limited resource issues
+    options.add_argument("--disable-gpu")  # Improve rendering in headless mode
 
     driver = webdriver.Chrome(options=options)
     wait = WebDriverWait(driver, 30)  # Increased timeout to 30 seconds
@@ -61,9 +62,11 @@ def run_selenium():
 
         # Wait for email input to be present and enter credentials
         email_input = wait.until(EC.presence_of_element_located((By.CSS_SELECTOR, "input[type='email']")))
+        email_input.clear()
         email_input.send_keys("baileyksmith2010@gmail.com")
 
         password_input = wait.until(EC.presence_of_element_located((By.CSS_SELECTOR, "input[type='password']")))
+        password_input.clear()
         password_input.send_keys("Boughton5")
 
         # Submit login using JavaScript
@@ -75,30 +78,16 @@ def run_selenium():
         my_bots = wait.until(EC.element_to_be_clickable((By.XPATH, "//*[contains(text(), 'My bots')]")))
         driver.execute_script("arguments[0].scrollIntoView(true);", my_bots)
         driver.execute_script("arguments[0].click();", my_bots)
-        time.sleep(15)  # Increased delay for dashboard load to 15 seconds
+        time.sleep(5)  # Wait for navigation to https://app.fnlb.net/bots
 
-        # Wait for the dashboard to fully load
-        wait.until(EC.presence_of_element_located((By.XPATH, "//*[contains(text(), 'My bots')]")))
-        time.sleep(3)  # Additional delay for dynamic content
+        # Wait for the new page to load and check URL
+        wait.until(EC.url_to_be("https://app.fnlb.net/bots"))
+        time.sleep(3)  # Additional delay for page to stabilize
 
-        # Switch to any iframes and find search input
-        search_input = None
-        iframes = driver.find_elements(By.TAG_NAME, "iframe")
-        for iframe in iframes + [None]:  # Include main content if no iframe
-            if iframe:
-                driver.switch_to.frame(iframe)
-            try:
-                # Try to find the input with exact placeholder
-                search_input = driver.execute_script("""
-                    return document.querySelector("input[placeholder='Search for a bot...']");
-                """)
-                if search_input:
-                    break
-            except:
-                pass
-            if iframe:
-                driver.switch_to.default_content()
-
+        # Find and force the search input using JavaScript
+        search_input = driver.execute_script("""
+            return document.querySelector("input[placeholder='Search for a bot...']");
+        """)
         if not search_input:
             logger.error(f"Page source: {driver.page_source}")
             raise TimeoutException("Could not find search input with placeholder 'Search for a bot...'")

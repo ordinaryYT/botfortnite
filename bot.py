@@ -8,7 +8,11 @@ from selenium.webdriver.support import expected_conditions as EC
 import os
 import time  # For optional sleeps if needed
 
-bot = commands.Bot(command_prefix='!')
+# Define intents
+intents = discord.Intents.default()
+intents.message_content = True  # Enable message content intent (required for reading commands)
+
+bot = commands.Bot(command_prefix='!', intents=intents)
 
 @bot.command(name='changeoutfit')
 async def change_outfit(ctx):

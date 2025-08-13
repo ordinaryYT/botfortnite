@@ -112,16 +112,33 @@ def run_selenium():
         time.sleep(5)
         take_screenshot(driver, "after_mybots_click")
 
-        # Step 6: Search for OGsbot69
-        logger.info("Searching for OGsbot69...")
+        # Step 6: Force interaction with search input
+        logger.info("Forcing search input interaction...")
         try:
-            # Try multiple selector patterns for the search input
+            # Try multiple selector patterns
             search_input = wait.until(EC.presence_of_element_located(
-                (By.XPATH, "//input[contains(@placeholder, 'Search') or contains(@placeholder, 'search')]")))
+                (By.XPATH, "//input[contains(@placeholder, 'Search') or contains(@placeholder, 'search') or @type='search']")))
             
+            # Force make it visible and interactable
+            driver.execute_script("""
+                arguments[0].style.display = 'block';
+                arguments[0].style.visibility = 'visible';
+                arguments[0].style.opacity = '1';
+                arguments[0].removeAttribute('disabled');
+                arguments[0].removeAttribute('readonly');
+            """, search_input)
+            
+            # Scroll to and click using JavaScript
+            driver.execute_script("arguments[0].scrollIntoView({block: 'center'});", search_input)
+            driver.execute_script("arguments[0].click();", search_input)
+            
+            # Clear and type with delays
             search_input.clear()
-            search_input.send_keys("OGsbot69")
-            time.sleep(3)  # Wait for search results
+            for char in "OGsbot69":
+                search_input.send_keys(char)
+                time.sleep(0.1)
+            
+            time.sleep(2)
             take_screenshot(driver, "after_search_input")
 
             # Step 7: Click on Pub bots 1
@@ -163,10 +180,10 @@ def run_selenium():
             driver.quit()
             return True
 
-        except TimeoutException as e:
-            logger.error(f"Timeout during search/navigation: {str(e)}")
-            take_screenshot(driver, "search_navigation_timeout")
-            logger.error(f"Current page source:\n{driver.page_source[:2000]}")
+        except Exception as e:
+            logger.error(f"Search interaction failed: {str(e)}")
+            take_screenshot(driver, "search_failed")
+            logger.error(f"Page source snippet:\n{driver.page_source[:2000]}")
             raise
 
     except Exception as e:

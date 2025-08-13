@@ -22,6 +22,21 @@ intents.message_content = True  # Enable message content intent
 
 bot = commands.Bot(command_prefix='!', intents=intents)
 
+# Add cooldown: 1 hour (3600 seconds) per user
+@bot.command(name='changeoutfit', cooldown_after=True, cooldown_rate=1, cooldown_per=3600)
+async def changeoutfit(ctx):
+    await ctx.send("Starting outfit change process...")
+    try:
+        with concurrent.futures.ThreadPoolExecutor() as executor:
+            success = await bot.loop.run_in_executor(executor, run_selenium)
+        if success:
+            await ctx.send("The command 'outfit fishstick' has been sent to OGsbot69.")
+        else:
+            await ctx.send("An error occurred while processing the outfit change. Check the server logs for details.")
+    except Exception as e:
+        await ctx.send(f"Unexpected error during execution: {str(e)}. Check the server logs for details.")
+        logger.error(f"Unexpected error: {str(e)}\nStacktrace: {traceback.format_exc()}")
+
 def run_selenium():
     # Generate a unique user data directory
     user_data_dir = f"/tmp/chrome-profile-{uuid.uuid4()}"
@@ -38,9 +53,10 @@ def run_selenium():
     try:
         driver.get("https://app.fnlb.net/")
 
-        # Wait for and click Login button using JavaScript to bypass interception
+        # Wait for and click Login button using JavaScript
         login_btn = wait.until(EC.element_to_be_clickable((By.XPATH, "//button[contains(text(), 'Login')]")))
         driver.execute_script("arguments[0].click();", login_btn)
+        time.sleep(2)  # Delay to avoid rapid requests
 
         # Wait for email input to be present and enter credentials
         email_input = wait.until(EC.presence_of_element_located((By.CSS_SELECTOR, "input[type='email']")))
@@ -49,24 +65,26 @@ def run_selenium():
         password_input = wait.until(EC.presence_of_element_located((By.CSS_SELECTOR, "input[type='password']")))
         password_input.send_keys("Boughton5")
 
-        # Submit login using JavaScript to bypass interception
+        # Submit login using JavaScript
         submit_btn = wait.until(EC.element_to_be_clickable((By.XPATH, "//button[contains(text(), 'Login')]")))
         driver.execute_script("arguments[0].click();", submit_btn)
+        time.sleep(5)  # Increased delay after login
 
         # Wait for dashboard to load, click My Bots
         my_bots = wait.until(EC.element_to_be_clickable((By.XPATH, "//*[contains(text(), 'My bots')]")))
         driver.execute_script("arguments[0].scrollIntoView(true);", my_bots)
         driver.execute_script("arguments[0].click();", my_bots)
+        time.sleep(5)  # Increased delay for dashboard load
 
-        # Wait for the dashboard to fully load before searching
-        wait.until(EC.presence_of_element_located((By.XPATH, "//*[contains(text(), 'My bots')]")))  # Ensure dashboard is present
-        time.sleep(3)  # Increased delay for dynamic content
+        # Wait for the dashboard to fully load
+        wait.until(EC.presence_of_element_located((By.XPATH, "//*[contains(text(), 'My bots')]")))
+        time.sleep(3)  # Additional delay for dynamic content
 
         # Force search input using JavaScript
         search_input = wait.until(EC.presence_of_element_located((By.XPATH, "//input[contains(@placeholder, 'Search for a bot')]")))
         driver.execute_script("arguments[0].value = 'OGsbot69';", search_input)
         driver.execute_script("arguments[0].dispatchEvent(new Event('input'));")  # Trigger input event
-        time.sleep(1)  # Small delay for search to process
+        time.sleep(2)  # Delay for search to process
 
         # Wait a bit for search results
         time.sleep(2)  # Adjust if needed
@@ -75,16 +93,19 @@ def run_selenium():
         pub_bots = wait.until(EC.element_to_be_clickable((By.XPATH, "//*[contains(text(), 'pub bots 1')]")))
         driver.execute_script("arguments[0].scrollIntoView(true);", pub_bots)
         driver.execute_script("arguments[0].click();", pub_bots)
+        time.sleep(2)
 
         # Click on OGsbot69 card using JavaScript
         ogs_bot = wait.until(EC.element_to_be_clickable((By.XPATH, "//*[contains(text(), 'OGsbot69')]")))
         driver.execute_script("arguments[0].scrollIntoView(true);", ogs_bot)
         driver.execute_script("arguments[0].click();", ogs_bot)
+        time.sleep(2)
 
         # Click Chat button using JavaScript
         chat_btn = wait.until(EC.element_to_be_clickable((By.XPATH, "//button[contains(text(), 'Chat')]")))
         driver.execute_script("arguments[0].scrollIntoView(true);", chat_btn)
         driver.execute_script("arguments[0].click();", chat_btn)
+        time.sleep(2)
 
         # Type command in chat
         chat_input = wait.until(EC.presence_of_element_located((By.XPATH, "//input[contains(@placeholder, 'Run a command')]")))
@@ -99,20 +120,6 @@ def run_selenium():
         if 'driver' in locals():
             driver.quit()
         return False
-
-@bot.command(name='changeoutfit')
-async def change_outfit(ctx):
-    await ctx.send("Starting outfit change process...")
-    try:
-        with concurrent.futures.ThreadPoolExecutor() as executor:
-            success = await bot.loop.run_in_executor(executor, run_selenium)
-        if success:
-            await ctx.send("The command 'outfit fishstick' has been sent to OGsbot69.")
-        else:
-            await ctx.send("An error occurred while processing the outfit change. Check the server logs for details.")
-    except Exception as e:
-        await ctx.send(f"Unexpected error during execution: {str(e)}. Check the server logs for details.")
-        logger.error(f"Unexpected error: {str(e)}\nStacktrace: {traceback.format_exc()}")
 
 # Use environment variable for bot token
 bot.run(os.getenv('DISCORD_BOT_TOKEN'))

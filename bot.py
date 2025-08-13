@@ -58,13 +58,15 @@ def run_selenium():
         driver.execute_script("arguments[0].scrollIntoView(true);", my_bots)
         driver.execute_script("arguments[0].click();", my_bots)
 
-        # Wait for the dashboard to fully load before searching for the input
+        # Wait for the dashboard to fully load before searching
         wait.until(EC.presence_of_element_located((By.XPATH, "//*[contains(text(), 'My bots')]")))  # Ensure dashboard is present
-        time.sleep(2)  # Additional delay for dynamic content
+        time.sleep(3)  # Increased delay for dynamic content
 
-        # Search for OGsbot69
+        # Force search input using JavaScript
         search_input = wait.until(EC.presence_of_element_located((By.XPATH, "//input[contains(@placeholder, 'Search for a bot')]")))
-        search_input.send_keys("OGsbot69")
+        driver.execute_script("arguments[0].value = 'OGsbot69';", search_input)
+        driver.execute_script("arguments[0].dispatchEvent(new Event('input'));")  # Trigger input event
+        time.sleep(1)  # Small delay for search to process
 
         # Wait a bit for search results
         time.sleep(2)  # Adjust if needed

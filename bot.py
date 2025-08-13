@@ -9,6 +9,7 @@ import os
 import time
 import uuid
 import concurrent.futures
+import traceback
 
 # Define intents
 intents = discord.Intents.default()
@@ -34,7 +35,7 @@ def run_selenium():
 
         # Wait for and click Login button, handling potential modal overlay
         login_btn = wait.until(EC.element_to_be_clickable((By.XPATH, "//button[contains(text(), 'Login')]")))
-        driver.execute_script("arguments[0].scrollIntoView(true);", login_btn)  # Scroll to element
+        driver.execute_script("arguments[0].scrollIntoView(true);", login_btn)
         wait.until(EC.element_to_be_clickable((By.XPATH, "//button[contains(text(), 'Login')]"))).click()
 
         # Wait for email input to be present and enter credentials
@@ -83,6 +84,8 @@ def run_selenium():
         driver.quit()
         return True
     except Exception as e:
+        error_msg = f"Error: {str(e)}\nStacktrace: {traceback.format_exc()}"
+        print(error_msg)  # Log to Render logs
         if 'driver' in locals():
             driver.quit()
         return False
@@ -95,7 +98,7 @@ async def change_outfit(ctx):
     if success:
         await ctx.send("The command 'outfit fishstick' has been sent to OGsbot69.")
     else:
-        await ctx.send("An error occurred while processing the outfit change.")
+        await ctx.send("An error occurred while processing the outfit change. Check the server logs for details.")
 
 # Use environment variable for bot token
 bot.run(os.getenv('DISCORD_BOT_TOKEN'))

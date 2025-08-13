@@ -76,20 +76,22 @@ def run_selenium():
         driver.execute_script("arguments[0].click();", my_bots)
         time.sleep(15)  # Increased delay for dashboard load to 15 seconds
 
-        # Wait for the dashboard banner to ensure full load
-        wait.until(EC.presence_of_element_located((By.XPATH, "//*[contains(text(), 'Get Your Bots Online with the FNLB App')]")))
+        # Wait for the dashboard to fully load
+        wait.until(EC.presence_of_element_located((By.XPATH, "//*[contains(text(), 'My bots')]")))
         time.sleep(3)  # Additional delay for dynamic content
 
         # Retry loop for locating search input
         max_retries = 3
+        search_input = None
         for attempt in range(max_retries):
             try:
-                search_input = wait.until(EC.presence_of_element_located((By.XPATH, "//input[contains(@placeholder, 'Search for a bot')]")))
-                break
+                search_input = driver.find_element(By.XPATH, "//input[contains(@placeholder, 'Search for a bot')]")
+                if search_input.is_displayed():
+                    break
             except:
                 time.sleep(5)  # Wait 5 seconds before retrying
                 if attempt == max_retries - 1:
-                    raise  # Raise the exception if all retries fail
+                    raise TimeoutException("Could not find or display search input after retries")
 
         # Force search input using JavaScript
         driver.execute_script("arguments[0].value = 'OGsbot69';", search_input)

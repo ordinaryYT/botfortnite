@@ -9,7 +9,12 @@ import os
 import time
 import uuid
 import concurrent.futures
+import logging
 import traceback
+
+# Configure logging
+logging.basicConfig(level=logging.INFO)
+logger = logging.getLogger(__name__)
 
 # Define intents
 intents = discord.Intents.default()
@@ -85,7 +90,7 @@ def run_selenium():
         return True
     except Exception as e:
         error_msg = f"Error: {str(e)}\nStacktrace: {traceback.format_exc()}"
-        print(error_msg)  # Log to Render logs
+        logger.error(error_msg)  # Log to Render logs with ERROR level
         if 'driver' in locals():
             driver.quit()
         return False
@@ -93,12 +98,16 @@ def run_selenium():
 @bot.command(name='changeoutfit')
 async def change_outfit(ctx):
     await ctx.send("Starting outfit change process...")
-    with concurrent.futures.ThreadPoolExecutor() as executor:
-        success = await bot.loop.run_in_executor(executor, run_selenium)
-    if success:
-        await ctx.send("The command 'outfit fishstick' has been sent to OGsbot69.")
-    else:
-        await ctx.send("An error occurred while processing the outfit change. Check the server logs for details.")
+    try:
+        with concurrent.futures.ThreadPoolExecutor() as executor:
+            success = await bot.loop.run_in_executor(executor, run_selenium)
+        if success:
+            await ctx.send("The command 'outfit fishstick' has been sent to OGsbot69.")
+        else:
+            await ctx.send("An error occurred while processing the outfit change. Check the server logs for details.")
+    except Exception as e:
+        await ctx.send(f"Unexpected error during execution: {str(e)}. Check the server logs for details.")
+        logger.error(f"Unexpected error: {str(e)}\nStacktrace: {traceback.format_exc()}")
 
 # Use environment variable for bot token
 bot.run(os.getenv('DISCORD_BOT_TOKEN'))

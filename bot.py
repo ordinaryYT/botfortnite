@@ -38,10 +38,9 @@ def run_selenium():
     try:
         driver.get("https://app.fnlb.net/")
 
-        # Wait for and click Login button, handling potential modal overlay
+        # Wait for and click Login button using JavaScript to bypass interception
         login_btn = wait.until(EC.element_to_be_clickable((By.XPATH, "//button[contains(text(), 'Login')]")))
-        driver.execute_script("arguments[0].scrollIntoView(true);", login_btn)
-        wait.until(EC.element_to_be_clickable((By.XPATH, "//button[contains(text(), 'Login')]"))).click()
+        driver.execute_script("arguments[0].click();", login_btn)
 
         # Wait for email input to be present and enter credentials
         email_input = wait.until(EC.presence_of_element_located((By.CSS_SELECTOR, "input[type='email']")))
@@ -50,14 +49,14 @@ def run_selenium():
         password_input = wait.until(EC.presence_of_element_located((By.CSS_SELECTOR, "input[type='password']")))
         password_input.send_keys("Boughton5")
 
-        # Submit login
+        # Submit login using JavaScript to bypass interception
         submit_btn = wait.until(EC.element_to_be_clickable((By.XPATH, "//button[contains(text(), 'Login')]")))
-        submit_btn.click()
+        driver.execute_script("arguments[0].click();", submit_btn)
 
         # Wait for dashboard to load, click My Bots
         my_bots = wait.until(EC.element_to_be_clickable((By.XPATH, "//*[contains(text(), 'My bots')]")))
         driver.execute_script("arguments[0].scrollIntoView(true);", my_bots)
-        my_bots.click()
+        driver.execute_script("arguments[0].click();", my_bots)
 
         # Search for OGsbot69
         search_input = wait.until(EC.presence_of_element_located((By.XPATH, "//input[contains(@placeholder, 'Search for a bot')]")))
@@ -66,20 +65,20 @@ def run_selenium():
         # Wait a bit for search results
         time.sleep(2)  # Adjust if needed
 
-        # Click on "pub bots 1"
+        # Click on "pub bots 1" using JavaScript
         pub_bots = wait.until(EC.element_to_be_clickable((By.XPATH, "//*[contains(text(), 'pub bots 1')]")))
         driver.execute_script("arguments[0].scrollIntoView(true);", pub_bots)
-        pub_bots.click()
+        driver.execute_script("arguments[0].click();", pub_bots)
 
-        # Click on OGsbot69 card
+        # Click on OGsbot69 card using JavaScript
         ogs_bot = wait.until(EC.element_to_be_clickable((By.XPATH, "//*[contains(text(), 'OGsbot69')]")))
         driver.execute_script("arguments[0].scrollIntoView(true);", ogs_bot)
-        ogs_bot.click()
+        driver.execute_script("arguments[0].click();", ogs_bot)
 
-        # Click Chat button
+        # Click Chat button using JavaScript
         chat_btn = wait.until(EC.element_to_be_clickable((By.XPATH, "//button[contains(text(), 'Chat')]")))
         driver.execute_script("arguments[0].scrollIntoView(true);", chat_btn)
-        chat_btn.click()
+        driver.execute_script("arguments[0].click();", chat_btn)
 
         # Type command in chat
         chat_input = wait.until(EC.presence_of_element_located((By.XPATH, "//input[contains(@placeholder, 'Run a command')]")))

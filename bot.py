@@ -58,15 +58,15 @@ def run_selenium():
     user_data_dir = f"/tmp/chrome-profile-{uuid.uuid4()}"
 
     options = webdriver.ChromeOptions()
-    options.add_argument(f"user-data-dir={user_data_dir}")  # Specify unique user data dir
-    options.add_argument("--headless")  # Run in headless mode for Render
-    options.add_argument("--no-sandbox")  # Required for some environments like Render
-    options.add_argument("--disable-dev-shm-usage")  # Overcome limited resource issues
-    options.add_argument("--disable-gpu")  # Improve rendering in headless mode
-    options.add_argument("--window-size=1920,1080")  # Set window size
+    options.add_argument(f"user-data-dir={user_data_dir}")
+    options.add_argument("--headless")
+    options.add_argument("--no-sandbox")
+    options.add_argument("--disable-dev-shm-usage")
+    options.add_argument("--disable-gpu")
+    options.add_argument("--window-size=1920,1080")
 
     driver = webdriver.Chrome(options=options)
-    wait = WebDriverWait(driver, 40)  # Increased timeout to 40 seconds
+    wait = WebDriverWait(driver, 30)
 
     try:
         # Step 1: Navigate to FNLB
@@ -76,85 +76,83 @@ def run_selenium():
 
         # Step 2: Click Login button
         logger.info("Clicking login button...")
-        login_btn = wait.until(EC.element_to_be_clickable((By.XPATH, "//button[contains(text(), 'Login')]")))
+        login_btn = wait.until(EC.element_to_be_clickable(
+            (By.XPATH, "//button[contains(translate(., 'ABCDEFGHIJKLMNOPQRSTUVWXYZ', 'abcdefghijklmnopqrstuvwxyz'), 'login')]")))
         driver.execute_script("arguments[0].click();", login_btn)
         time.sleep(2)
         take_screenshot(driver, "after_login_click")
 
         # Step 3: Enter credentials
         logger.info("Entering credentials...")
-        email_input = wait.until(EC.presence_of_element_located((By.CSS_SELECTOR, "input[type='email']")))
+        email_input = wait.until(EC.presence_of_element_located(
+            (By.CSS_SELECTOR, "input[type='email']")))
         email_input.clear()
         email_input.send_keys("baileyksmith2010@gmail.com")
 
-        password_input = wait.until(EC.presence_of_element_located((By.CSS_SELECTOR, "input[type='password']")))
+        password_input = wait.until(EC.presence_of_element_located(
+            (By.CSS_SELECTOR, "input[type='password']")))
         password_input.clear()
         password_input.send_keys("Boughton5")
         take_screenshot(driver, "credentials_entered")
 
         # Step 4: Submit login
         logger.info("Submitting login...")
-        submit_btn = wait.until(EC.element_to_be_clickable((By.XPATH, "//button[contains(text(), 'Login')]")))
+        submit_btn = wait.until(EC.element_to_be_clickable(
+            (By.XPATH, "//button[contains(translate(., 'ABCDEFGHIJKLMNOPQRSTUVWXYZ', 'abcdefghijklmnopqrstuvwxyz'), 'login')]")))
         driver.execute_script("arguments[0].click();", submit_btn)
         time.sleep(5)
         take_screenshot(driver, "after_login_submit")
 
         # Step 5: Click My Bots
         logger.info("Clicking My Bots...")
-        my_bots = wait.until(EC.element_to_be_clickable((By.XPATH, "//*[contains(text(), 'My bots')]")))
+        my_bots = wait.until(EC.element_to_be_clickable(
+            (By.XPATH, "//*[contains(translate(., 'ABCDEFGHIJKLMNOPQRSTUVWXYZ', 'abcdefghijklmnopqrstuvwxyz'), 'my bots')]")))
         driver.execute_script("arguments[0].scrollIntoView(true);", my_bots)
         driver.execute_script("arguments[0].click();", my_bots)
-        time.sleep(10)
+        time.sleep(5)
         take_screenshot(driver, "after_mybots_click")
 
-        # Step 6: Search for bot
-        logger.info("Searching for bot...")
+        # Step 6: Alternative navigation to find the bot
+        logger.info("Attempting to locate OGsbot69...")
+        
+        # Try multiple approaches to find the bot
         try:
-            # Try multiple selector strategies for search input
-            search_input = wait.until(EC.element_to_be_clickable(
-                (By.XPATH, "//input[contains(@placeholder, 'Search')]")))
+            # Approach 1: Try clicking "pub bots 1" directly
+            pub_bots = wait.until(EC.element_to_be_clickable(
+                (By.XPATH, "//*[contains(translate(., 'ABCDEFGHIJKLMNOPQRSTUVWXYZ', 'abcdefghijklmnopqrstuvwxyz'), 'pub bots 1')]")))
+            driver.execute_script("arguments[0].scrollIntoView(true);", pub_bots)
+            driver.execute_script("arguments[0].click();", pub_bots)
+            time.sleep(3)
+            take_screenshot(driver, "after_pub_bots_click")
             
-            logger.info(f"Search input attributes: placeholder='{search_input.get_attribute('placeholder')}', "
-                      f"type='{search_input.get_attribute('type')}'")
-            
-            driver.execute_script("arguments[0].value = 'OGsbot69';", search_input)
-            driver.execute_script("arguments[0].dispatchEvent(new Event('input'));")
-            time.sleep(2)
-            take_screenshot(driver, "after_search_input")
+            # Then find OGsbot69
+            ogs_bot = wait.until(EC.element_to_be_clickable(
+                (By.XPATH, "//*[contains(translate(., 'ABCDEFGHIJKLMNOPQRSTUVWXYZ', 'abcdefghijklmnopqrstuvwxyz'), 'ogsbot69')]")))
         except TimeoutException:
-            logger.error("Failed to find search input. Current page source:")
-            logger.error(driver.page_source[:2000])  # Log first 2000 chars of page source
-            take_screenshot(driver, "search_input_timeout")
-            raise
+            # Approach 2: Try finding OGsbot69 directly
+            logger.warning("First approach failed, trying direct bot search")
+            ogs_bot = wait.until(EC.element_to_be_clickable(
+                (By.XPATH, "//*[contains(translate(., 'ABCDEFGHIJKLMNOPQRSTUVWXYZ', 'abcdefghijklmnopqrstuvwxyz'), 'ogsbot69')]")))
 
-        # Step 7: Click on pub bots 1
-        logger.info("Clicking pub bots 1...")
-        pub_bots = wait.until(EC.element_to_be_clickable((By.XPATH, "//*[contains(text(), 'pub bots 1')]")))
-        driver.execute_script("arguments[0].scrollIntoView(true);", pub_bots)
-        driver.execute_script("arguments[0].click();", pub_bots)
-        time.sleep(2)
-        take_screenshot(driver, "after_pub_bots_click")
-
-        # Step 8: Click on OGsbot69
-        logger.info("Clicking OGsbot69...")
-        ogs_bot = wait.until(EC.element_to_be_clickable((By.XPATH, "//*[contains(text(), 'OGsbot69')]")))
+        # Click on the bot
         driver.execute_script("arguments[0].scrollIntoView(true);", ogs_bot)
         driver.execute_script("arguments[0].click();", ogs_bot)
         time.sleep(2)
         take_screenshot(driver, "after_ogsbot_click")
 
-        # Step 9: Click Chat button
+        # Step 7: Click Chat button
         logger.info("Clicking Chat button...")
-        chat_btn = wait.until(EC.element_to_be_clickable((By.XPATH, "//button[contains(text(), 'Chat')]")))
+        chat_btn = wait.until(EC.element_to_be_clickable(
+            (By.XPATH, "//button[contains(translate(., 'ABCDEFGHIJKLMNOPQRSTUVWXYZ', 'abcdefghijklmnopqrstuvwxyz'), 'chat')]")))
         driver.execute_script("arguments[0].scrollIntoView(true);", chat_btn)
         driver.execute_script("arguments[0].click();", chat_btn)
         time.sleep(2)
         take_screenshot(driver, "after_chat_click")
 
-        # Step 10: Send command
+        # Step 8: Send command
         logger.info("Sending command...")
         chat_input = wait.until(EC.presence_of_element_located(
-            (By.XPATH, "//input[contains(@placeholder, 'Run a command')]")))
+            (By.XPATH, "//input[contains(translate(@placeholder, 'ABCDEFGHIJKLMNOPQRSTUVWXYZ', 'abcdefghijklmnopqrstuvwxyz'), 'run a command')]")))
         chat_input.send_keys("outfit fishstick")
         chat_input.send_keys(Keys.ENTER)
         time.sleep(2)
@@ -164,11 +162,20 @@ def run_selenium():
         return True
 
     except Exception as e:
-        error_msg = f"Error at step: {logger.name}\nError: {str(e)}\nStacktrace: {traceback.format_exc()}"
-        logger.error(error_msg)
+        logger.error(f"Error during execution: {str(e)}\nStacktrace: {traceback.format_exc()}")
+        
+        # Capture as much debugging info as possible
         if 'driver' in locals():
-            take_screenshot(driver, "error_state")
-            driver.quit()
+            try:
+                logger.error(f"Current URL: {driver.current_url}")
+                logger.error(f"Page title: {driver.title}")
+                take_screenshot(driver, "error_state")
+                logger.error(f"Page source snippet:\n{driver.page_source[:2000]}")
+            except Exception as debug_error:
+                logger.error(f"Failed to capture debug info: {str(debug_error)}")
+            finally:
+                driver.quit()
+        
         return False
 
 # Use environment variable for bot token

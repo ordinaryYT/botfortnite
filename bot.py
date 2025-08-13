@@ -33,7 +33,7 @@ def run_selenium():
     options.add_argument("--disable-dev-shm-usage")  # Overcome limited resource issues
 
     driver = webdriver.Chrome(options=options)
-    wait = WebDriverWait(driver, 20)  # Increased timeout to 20 seconds
+    wait = WebDriverWait(driver, 30)  # Increased timeout to 30 seconds
 
     try:
         driver.get("https://app.fnlb.net/")
@@ -57,6 +57,10 @@ def run_selenium():
         my_bots = wait.until(EC.element_to_be_clickable((By.XPATH, "//*[contains(text(), 'My bots')]")))
         driver.execute_script("arguments[0].scrollIntoView(true);", my_bots)
         driver.execute_script("arguments[0].click();", my_bots)
+
+        # Wait for the dashboard to fully load before searching for the input
+        wait.until(EC.presence_of_element_located((By.XPATH, "//*[contains(text(), 'My bots')]")))  # Ensure dashboard is present
+        time.sleep(2)  # Additional delay for dynamic content
 
         # Search for OGsbot69
         search_input = wait.until(EC.presence_of_element_located((By.XPATH, "//input[contains(@placeholder, 'Search for a bot')]")))

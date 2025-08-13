@@ -5,6 +5,7 @@ from selenium.webdriver.common.keys import Keys
 from selenium.webdriver.common.by import By
 from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
+from selenium.common.exceptions import TimeoutException, NoSuchElementException
 import os
 import time
 import uuid
@@ -85,12 +86,13 @@ def run_selenium():
         search_input = None
         for attempt in range(max_retries):
             try:
-                search_input = driver.find_element(By.XPATH, "//input[contains(@placeholder, 'Search for a bot')]")
+                search_input = driver.find_element(By.XPATH, "//input[contains(@placeholder, 'Search') and contains(@placeholder, 'bot')]")
                 if search_input.is_displayed():
                     break
-            except:
+            except NoSuchElementException:
                 time.sleep(5)  # Wait 5 seconds before retrying
                 if attempt == max_retries - 1:
+                    logger.error(f"Page source after retries: {driver.page_source}")
                     raise TimeoutException("Could not find or display search input after retries")
 
         # Force search input using JavaScript

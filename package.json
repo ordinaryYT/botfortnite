@@ -1,0 +1,15 @@
+{
+  "name": "fnlb-bot",
+  "version": "1.0.0",
+  "description": "A Discord bot to automate outfit changes on FNLB",
+  "main": "index.js",
+  "scripts": {
+    "start": "python bot.py"
+  },
+  "dependencies": {
+    "python-shell": "^5.0.0"
+  },
+  "engines": {
+    "node": ">=14.0.0"
+  }
+}

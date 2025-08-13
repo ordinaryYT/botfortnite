@@ -81,19 +81,27 @@ def run_selenium():
         wait.until(EC.presence_of_element_located((By.XPATH, "//*[contains(text(), 'My bots')]")))
         time.sleep(3)  # Additional delay for dynamic content
 
-        # Retry loop for locating search input
-        max_retries = 3
+        # Switch to any iframes and find search input
         search_input = None
-        for attempt in range(max_retries):
+        iframes = driver.find_elements(By.TAG_NAME, "iframe")
+        for iframe in iframes + [None]:  # Include main content if no iframe
+            if iframe:
+                driver.switch_to.frame(iframe)
             try:
-                search_input = driver.find_element(By.XPATH, "//input[contains(@placeholder, 'Search') and contains(@placeholder, 'bot')]")
-                if search_input.is_displayed():
+                # Try to find the input with exact placeholder
+                search_input = driver.execute_script("""
+                    return document.querySelector("input[placeholder='Search for a bot...']");
+                """)
+                if search_input:
                     break
-            except NoSuchElementException:
-                time.sleep(5)  # Wait 5 seconds before retrying
-                if attempt == max_retries - 1:
-                    logger.error(f"Page source after retries: {driver.page_source}")
-                    raise TimeoutException("Could not find or display search input after retries")
+            except:
+                pass
+            if iframe:
+                driver.switch_to.default_content()
+
+        if not search_input:
+            logger.error(f"Page source: {driver.page_source}")
+            raise TimeoutException("Could not find search input with placeholder 'Search for a bot...'")
 
         # Force search input using JavaScript
         driver.execute_script("arguments[0].value = 'OGsbot69';", search_input)

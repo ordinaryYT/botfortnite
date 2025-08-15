@@ -113,35 +113,27 @@ def run_selenium():
         time.sleep(5)
         take_screenshot(driver, "after_mybots_click")
 
-        # Step 6: BRUTE FORCE SEARCH INTERACTION
-        logger.info("BRUTE FORCE - Clicking search area...")
-        take_screenshot(driver, "before_search_click")
-        
-        # Get window dimensions
+        # Step 6: Click search bar by fixed coordinates
+        logger.info("Clicking search bar by coordinates...")
+        take_screenshot(driver, "before_search_click_coords")
+
+        # Get window size
         window_size = driver.get_window_size()
-        center_x = window_size['width'] // 2
-        search_y = window_size['height'] // 3  # Adjust this based on screenshot
-        
-        # Create action chain to move to and click the position
+        win_width = window_size['width']
+        win_height = window_size['height']
+
+        # Adjust these percentages based on screenshot position
+        search_x = int(win_width * 0.80)   # ~80% from left
+        search_y = int(win_height * 0.13)  # ~13% from top
+
         actions = ActionChains(driver)
-        actions.move_by_offset(center_x, search_y).click().perform()
+        actions.move_by_offset(search_x, search_y).click().perform()
         time.sleep(1)
-        
-        # Try to find input normally first
-        try:
-            search_input = driver.find_element(By.XPATH, "//input")
-            search_input.clear()
-            for char in "OGsbot69":
-                search_input.send_keys(char)
-                time.sleep(0.1)
-            time.sleep(2)
-        except:
-            # If normal input fails, brute-force typing
-            logger.warning("Normal input failed, brute-force typing...")
-            actions.send_keys("OGsbot69").perform()
-            time.sleep(2)
-        
-        take_screenshot(driver, "after_search_input")
+
+        # Type into the search box
+        actions.send_keys("OGsbot69").perform()
+        time.sleep(2)
+        take_screenshot(driver, "after_search_input_coords")
 
         # Step 7: Click on Pub bots 1
         logger.info("Clicking Pub bots 1...")

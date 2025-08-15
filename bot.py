@@ -5,8 +5,6 @@ from selenium.webdriver.common.keys import Keys
 from selenium.webdriver.common.by import By
 from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
-from selenium.webdriver.common.action_chains import ActionChains
-from selenium.common.exceptions import TimeoutException, NoSuchElementException
 import os
 import time
 import uuid
@@ -24,7 +22,7 @@ logger = logging.getLogger(__name__)
 
 # Define intents
 intents = discord.Intents.default()
-intents.message_content = True  # Enable message content intent
+intents.message_content = True
 
 bot = commands.Bot(command_prefix='!', intents=intents)
 
@@ -47,15 +45,15 @@ async def changeoutfit(ctx):
         with concurrent.futures.ThreadPoolExecutor() as executor:
             success = await bot.loop.run_in_executor(executor, run_selenium)
         if success:
-            await ctx.send("The command 'outfit fishstick' has been sent to OGsbot69.")
+            await ctx.send("The command 'outfit fishstick' has been sent to the bot.")
         else:
-            await ctx.send("An error occurred while processing the outfit change. Check the server logs for details.")
+            await ctx.send("An error occurred while processing the outfit change. Check logs for details.")
     except Exception as e:
-        await ctx.send(f"Unexpected error during execution: {str(e)}. Check the server logs for details.")
+        await ctx.send(f"Unexpected error during execution: {str(e)}")
         logger.error(f"Unexpected error: {str(e)}\nStacktrace: {traceback.format_exc()}")
 
 def run_selenium():
-    # Generate a unique user data directory
+    # Generate unique user data dir
     user_data_dir = f"/tmp/chrome-profile-{uuid.uuid4()}"
 
     options = webdriver.ChromeOptions()
@@ -70,12 +68,12 @@ def run_selenium():
     wait = WebDriverWait(driver, 30)
 
     try:
-        # Step 1: Navigate to FNLB
+        # Step 1: Go to FNLB login
         logger.info("Navigating to FNLB...")
         driver.get("https://app.fnlb.net/")
         take_screenshot(driver, "initial_page_load")
 
-        # Step 2: Click Login button
+        # Step 2: Click login
         logger.info("Clicking login button...")
         login_btn = wait.until(EC.element_to_be_clickable(
             (By.XPATH, "//button[contains(translate(., 'ABCDEFGHIJKLMNOPQRSTUVWXYZ', 'abcdefghijklmnopqrstuvwxyz'), 'login')]")))
@@ -85,13 +83,11 @@ def run_selenium():
 
         # Step 3: Enter credentials
         logger.info("Entering credentials...")
-        email_input = wait.until(EC.presence_of_element_located(
-            (By.CSS_SELECTOR, "input[type='email']")))
+        email_input = wait.until(EC.presence_of_element_located((By.CSS_SELECTOR, "input[type='email']")))
         email_input.clear()
         email_input.send_keys("baileyksmith2010@gmail.com")
 
-        password_input = wait.until(EC.presence_of_element_located(
-            (By.CSS_SELECTOR, "input[type='password']")))
+        password_input = wait.until(EC.presence_of_element_located((By.CSS_SELECTOR, "input[type='password']")))
         password_input.clear()
         password_input.send_keys("Boughton5")
         take_screenshot(driver, "credentials_entered")
@@ -104,56 +100,14 @@ def run_selenium():
         time.sleep(5)
         take_screenshot(driver, "after_login_submit")
 
-        # Step 5: Click My Bots
-        logger.info("Clicking My Bots...")
-        my_bots = wait.until(EC.element_to_be_clickable(
-            (By.XPATH, "//*[contains(translate(., 'ABCDEFGHIJKLMNOPQRSTUVWXYZ', 'abcdefghijklmnopqrstuvwxyz'), 'my bots')]")))
-        driver.execute_script("arguments[0].scrollIntoView(true);", my_bots)
-        driver.execute_script("arguments[0].click();", my_bots)
+        # Step 5: Go directly to bot page
+        bot_url = "https://app.fnlb.net/bot?id=67c38542d7b197053b403cc8"
+        logger.info(f"Navigating directly to bot page: {bot_url}")
+        driver.get(bot_url)
         time.sleep(5)
-        take_screenshot(driver, "after_mybots_click")
+        take_screenshot(driver, "bot_page_loaded")
 
-        # Step 6: Click search bar by fixed coordinates
-        logger.info("Clicking search bar by coordinates...")
-        take_screenshot(driver, "before_search_click_coords")
-
-        # Get window size
-        window_size = driver.get_window_size()
-        win_width = window_size['width']
-        win_height = window_size['height']
-
-        # Adjust these percentages based on screenshot position
-        search_x = int(win_width * 0.80)   # ~80% from left
-        search_y = int(win_height * 0.13)  # ~13% from top
-
-        actions = ActionChains(driver)
-        actions.move_by_offset(search_x, search_y).click().perform()
-        time.sleep(1)
-
-        # Type into the search box
-        actions.send_keys("OGsbot69").perform()
-        time.sleep(2)
-        take_screenshot(driver, "after_search_input_coords")
-
-        # Step 7: Click on Pub bots 1
-        logger.info("Clicking Pub bots 1...")
-        pub_bots = wait.until(EC.element_to_be_clickable(
-            (By.XPATH, "//*[contains(translate(., 'ABCDEFGHIJKLMNOPQRSTUVWXYZ', 'abcdefghijklmnopqrstuvwxyz'), 'pub bots 1')]")))
-        driver.execute_script("arguments[0].scrollIntoView(true);", pub_bots)
-        driver.execute_script("arguments[0].click();", pub_bots)
-        time.sleep(3)
-        take_screenshot(driver, "after_pub_bots_click")
-
-        # Step 8: Click on OGsbot69
-        logger.info("Clicking OGsbot69...")
-        ogs_bot = wait.until(EC.element_to_be_clickable(
-            (By.XPATH, "//*[contains(translate(., 'ABCDEFGHIJKLMNOPQRSTUVWXYZ', 'abcdefghijklmnopqrstuvwxyz'), 'ogsbot69')]")))
-        driver.execute_script("arguments[0].scrollIntoView(true);", ogs_bot)
-        driver.execute_script("arguments[0].click();", ogs_bot)
-        time.sleep(2)
-        take_screenshot(driver, "after_ogsbot_click")
-
-        # Step 9: Click Chat button
+        # Step 6: Click Chat button
         logger.info("Clicking Chat button...")
         chat_btn = wait.until(EC.element_to_be_clickable(
             (By.XPATH, "//button[contains(translate(., 'ABCDEFGHIJKLMNOPQRSTUVWXYZ', 'abcdefghijklmnopqrstuvwxyz'), 'chat')]")))
@@ -162,8 +116,8 @@ def run_selenium():
         time.sleep(2)
         take_screenshot(driver, "after_chat_click")
 
-        # Step 10: Send command
-        logger.info("Sending command...")
+        # Step 7: Send command
+        logger.info("Sending command 'outfit fishstick'...")
         chat_input = wait.until(EC.presence_of_element_located(
             (By.XPATH, "//input[contains(translate(@placeholder, 'ABCDEFGHIJKLMNOPQRSTUVWXYZ', 'abcdefghijklmnopqrstuvwxyz'), 'run a command')]")))
         chat_input.send_keys("outfit fishstick")
@@ -175,19 +129,13 @@ def run_selenium():
         return True
 
     except Exception as e:
-        logger.error(f"BRUTE FORCE FAILED: {str(e)}\nStacktrace: {traceback.format_exc()}")
-        
+        logger.error(f"Execution failed: {str(e)}\nStacktrace: {traceback.format_exc()}")
         if 'driver' in locals():
             try:
-                logger.error(f"Current URL: {driver.current_url}")
-                logger.error(f"Page title: {driver.title}")
                 take_screenshot(driver, "final_error_state")
-            except Exception as debug_error:
-                logger.error(f"Failed to capture debug info: {str(debug_error)}")
             finally:
                 driver.quit()
-        
         return False
 
-# Use environment variable for bot token
+# Bot token from env
 bot.run(os.getenv('DISCORD_BOT_TOKEN'))

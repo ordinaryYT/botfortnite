@@ -5,6 +5,8 @@ from selenium.webdriver.common.keys import Keys
 from selenium.webdriver.common.by import By
 from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
+from selenium.webdriver.common.action_chains import ActionChains
+from selenium.common.exceptions import TimeoutException, NoSuchElementException
 import os
 import time
 import uuid
@@ -27,7 +29,7 @@ intents.message_content = True
 bot = commands.Bot(command_prefix='!', intents=intents)
 
 def take_screenshot(driver, step_name):
-    """Helper function to take screenshots for debugging"""
+    """Helper function to take screenshots"""
     timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
     filename = f"screenshot_{step_name}_{timestamp}.png"
     try:
@@ -45,19 +47,17 @@ async def changeoutfit(ctx):
         with concurrent.futures.ThreadPoolExecutor() as executor:
             success = await bot.loop.run_in_executor(executor, run_selenium)
         if success:
-            await ctx.send("The command 'outfit fishstick' has been sent to the bot.")
+            await ctx.send("Outfit change command sent successfully!")
         else:
-            await ctx.send("An error occurred while processing the outfit change. Check logs for details.")
+            await ctx.send("Failed to send outfit command. Check logs.")
     except Exception as e:
-        await ctx.send(f"Unexpected error during execution: {str(e)}")
-        logger.error(f"Unexpected error: {str(e)}\nStacktrace: {traceback.format_exc()}")
+        await ctx.send(f"Error: {str(e)}")
+        logger.error(f"Error: {str(e)}\n{traceback.format_exc()}")
 
 def run_selenium():
-    # Generate unique user data dir
-    user_data_dir = f"/tmp/chrome-profile-{uuid.uuid4()}"
-
+    # Setup Chrome options
     options = webdriver.ChromeOptions()
-    options.add_argument(f"user-data-dir={user_data_dir}")
+    options.add_argument(f"user-data-dir=/tmp/chrome-profile-{uuid.uuid4()}")
     options.add_argument("--headless")
     options.add_argument("--no-sandbox")
     options.add_argument("--disable-dev-shm-usage")
@@ -65,77 +65,58 @@ def run_selenium():
     options.add_argument("--window-size=1920,1080")
 
     driver = webdriver.Chrome(options=options)
-    wait = WebDriverWait(driver, 30)
+    actions = ActionChains(driver)
 
     try:
-        # Step 1: Go to FNLB login
-        logger.info("Navigating to FNLB...")
+        # Step 1: Login
+        logger.info("Logging in...")
         driver.get("https://app.fnlb.net/")
-        take_screenshot(driver, "initial_page_load")
-
-        # Step 2: Click login
-        logger.info("Clicking login button...")
-        login_btn = wait.until(EC.element_to_be_clickable(
-            (By.XPATH, "//button[contains(translate(., 'ABCDEFGHIJKLMNOPQRSTUVWXYZ', 'abcdefghijklmnopqrstuvwxyz'), 'login')]")))
-        driver.execute_script("arguments[0].click();", login_btn)
+        time.sleep(3)
+        
+        # Click login button
+        login_btn = WebDriverWait(driver, 20).until(
+            EC.element_to_be_clickable((By.XPATH, "//button[contains(., 'Login')]")))
+        login_btn.click()
         time.sleep(2)
-        take_screenshot(driver, "after_login_click")
-
-        # Step 3: Enter credentials
-        logger.info("Entering credentials...")
-        email_input = wait.until(EC.presence_of_element_located((By.CSS_SELECTOR, "input[type='email']")))
-        email_input.clear()
-        email_input.send_keys("baileyksmith2010@gmail.com")
-
-        password_input = wait.until(EC.presence_of_element_located((By.CSS_SELECTOR, "input[type='password']")))
-        password_input.clear()
-        password_input.send_keys("Boughton5")
-        take_screenshot(driver, "credentials_entered")
-
-        # Step 4: Submit login
-        logger.info("Submitting login...")
-        submit_btn = wait.until(EC.element_to_be_clickable(
-            (By.XPATH, "//button[contains(translate(., 'ABCDEFGHIJKLMNOPQRSTUVWXYZ', 'abcdefghijklmnopqrstuvwxyz'), 'login')]")))
-        driver.execute_script("arguments[0].click();", submit_btn)
+        
+        # Enter credentials
+        email = driver.find_element(By.CSS_SELECTOR, "input[type='email']")
+        email.send_keys("baileyksmith2010@gmail.com")
+        
+        password = driver.find_element(By.CSS_SELECTOR, "input[type='password']")
+        password.send_keys("Boughton5")
+        time.sleep(1)
+        
+        # Submit login
+        submit = driver.find_element(By.XPATH, "//button[contains(., 'Login')]")
+        submit.click()
         time.sleep(5)
-        take_screenshot(driver, "after_login_submit")
+        take_screenshot(driver, "after_login")
 
-        # Step 5: Go directly to bot page
-        bot_url = "https://app.fnlb.net/bot?id=67c38542d7b197053b403cc8"
-        logger.info(f"Navigating directly to bot page: {bot_url}")
-        driver.get(bot_url)
-        time.sleep(5)
-        take_screenshot(driver, "bot_page_loaded")
-
-        # Step 6: Click Chat button
-        logger.info("Clicking Chat button...")
-        chat_btn = wait.until(EC.element_to_be_clickable(
-            (By.XPATH, "//button[contains(translate(., 'ABCDEFGHIJKLMNOPQRSTUVWXYZ', 'abcdefghijklmnopqrstuvwxyz'), 'chat')]")))
-        driver.execute_script("arguments[0].scrollIntoView(true);", chat_btn)
-        driver.execute_script("arguments[0].click();", chat_btn)
+        # Step 2: Send keyboard commands only
+        logger.info("Sending keyboard commands...")
+        
+        # Press 'c' to open chat (no element searching)
+        actions.send_keys('c').perform()
         time.sleep(2)
-        take_screenshot(driver, "after_chat_click")
-
-        # Step 7: Send command
-        logger.info("Sending command 'outfit fishstick'...")
-        chat_input = wait.until(EC.presence_of_element_located(
-            (By.XPATH, "//input[contains(translate(@placeholder, 'ABCDEFGHIJKLMNOPQRSTUVWXYZ', 'abcdefghijklmnopqrstuvwxyz'), 'run a command')]")))
-        chat_input.send_keys("outfit fishstick")
-        chat_input.send_keys(Keys.ENTER)
+        take_screenshot(driver, "after_pressing_c")
+        
+        # Type command and press Enter
+        actions.send_keys("outfit fishstick").perform()
+        time.sleep(1)
+        actions.send_keys(Keys.ENTER).perform()
         time.sleep(2)
-        take_screenshot(driver, "after_command_sent")
+        take_screenshot(driver, "after_sending_command")
 
         driver.quit()
         return True
 
     except Exception as e:
-        logger.error(f"Execution failed: {str(e)}\nStacktrace: {traceback.format_exc()}")
+        logger.error(f"Error: {str(e)}\n{traceback.format_exc()}")
         if 'driver' in locals():
-            try:
-                take_screenshot(driver, "final_error_state")
-            finally:
-                driver.quit()
+            take_screenshot(driver, "error_state")
+            driver.quit()
         return False
 
-# Bot token from env
+# Run bot
 bot.run(os.getenv('DISCORD_BOT_TOKEN'))

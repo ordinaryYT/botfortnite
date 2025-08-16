@@ -70,11 +70,11 @@ async def changeoutfit(ctx):
         await ctx.send("🔐 **Manual Login Required**")
         await ctx.send("1. Visit the Render URL above to see the browser")
         await ctx.send("2. Complete the login and verification")
-        await ctx.send("3. Type `!continue` when done")
+        await ctx.send("3. Type `!proceed` when done")
         
-        # Wait for continue command
+        # Wait for proceed command
         def check(m):
-            return m.content == '!continue' and m.channel == ctx.channel and m.author == ctx.author
+            return m.content == '!proceed' and m.channel == ctx.channel and m.author == ctx.author
             
         try:
             await bot.wait_for('message', check=check, timeout=300)  # 5 minute timeout
@@ -119,8 +119,8 @@ async def changeoutfit(ctx):
             os.remove("current.png")
 
 @bot.command()
-async def continue(ctx):
-    """Dummy command to match the wait_for check"""
-    pass
+async def proceed(ctx):
+    """Confirmation command to continue after manual login"""
+    await ctx.send("👍 Received proceed command!")
 
 bot.run(os.getenv('DISCORD_TOKEN'))

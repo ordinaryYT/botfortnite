@@ -18,7 +18,11 @@ from datetime import datetime
 # Configure logging
 logging.basicConfig(
     level=logging.INFO,
-    format='%(asctime)s - %(levelname)s - %(message)s'
+    format='%(asctime)s - %(levelname)s - %(message)s',
+    handlers=[
+        logging.FileHandler('bot.log'),
+        logging.StreamHandler()
+    ]
 )
 logger = logging.getLogger(__name__)
 
@@ -32,6 +36,7 @@ def take_screenshot(driver, step_name):
     timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
     filename = f"screenshot_{step_name}_{timestamp}.png"
     driver.save_screenshot(filename)
+    logger.info(f"Screenshot saved: {filename}")
     return filename
 
 @bot.command(name='changeoutfit', cooldown_after=True, cooldown_rate=1, cooldown_per=3600)
@@ -43,9 +48,10 @@ async def changeoutfit(ctx):
         if success:
             await ctx.send("Outfit change command sent successfully!")
         else:
-            await ctx.send("Failed to send outfit command.")
+            await ctx.send("Failed to send outfit command. Check logs.")
     except Exception as e:
         await ctx.send(f"Error: {str(e)}")
+        logger.error(f"Error: {str(e)}\n{traceback.format_exc()}")
 
 def run_selenium():
     options = webdriver.ChromeOptions()
@@ -59,45 +65,66 @@ def run_selenium():
     actions = ActionChains(driver)
 
     try:
-        # Your existing working login code here
-        driver.get("https://app.fnlb.net/")
+        # Step 1: Go directly to bot URL
+        bot_url = "https://app.fnlb.net/bot?id=6814b1d57fbd12fb94b67c8a"
+        logger.info(f"Navigating to bot URL: {bot_url}")
+        driver.get(bot_url)
         time.sleep(3)
-        
-        login_btn = WebDriverWait(driver, 15).until(
-            EC.element_to_be_clickable((By.XPATH, "//button[contains(., 'Login')]")))
-        login_btn.click()
-        time.sleep(2)
-        
-        email = driver.find_element(By.CSS_SELECTOR, "input[type='email']")
-        email.send_keys("baileyksmith2010@gmail.com")
-        
-        password = driver.find_element(By.CSS_SELECTOR, "input[type='password']")
-        password.send_keys("Boughton5")
-        time.sleep(1)
-        
-        submit = driver.find_element(By.XPATH, "//button[contains(., 'Login')]")
-        submit.click()
-        time.sleep(5)
+        take_screenshot(driver, "initial_page")
 
-        # Only new part - pure keyboard automation after login
+        # Step 2: Check if login is required
+        try:
+            # Look for login elements
+            email_field = WebDriverWait(driver, 5).until(
+                EC.presence_of_element_located((By.CSS_SELECTOR, "input[type='email']")))
+            
+            logger.info("Login required - proceeding with authentication")
+            email_field.send_keys("baileyksmith2010@gmail.com")
+            
+            password_field = driver.find_element(By.CSS_SELECTOR, "input[type='password']")
+            password_field.send_keys("Boughton5")
+            time.sleep(1)
+            
+            login_button = driver.find_element(By.XPATH, "//button[contains(., 'Login')]")
+            login_button.click()
+            time.sleep(5)
+            take_screenshot(driver, "after_login")
+            
+            # After login, we should be back on the bot page
+            driver.get(bot_url)
+            time.sleep(3)
+            
+        except TimeoutException:
+            logger.info("No login required - already authenticated")
+            pass
+
+        # Step 3: Send keyboard commands
         logger.info("Sending keyboard commands...")
         
-        # Press 'c' key to open chat
-        actions.send_keys('c').perform()
+        # Focus on page body
+        body = driver.find_element(By.TAG_NAME, 'body')
+        body.click()
         time.sleep(1)
         
-        # Type the command
-        actions.send_keys("outfit fishstick").perform() 
+        # Press 'c' to open chat
+        actions.send_keys('c').perform()
+        time.sleep(2)
+        take_screenshot(driver, "after_pressing_c")
+        
+        # Type command
+        actions.send_keys("outfit fishstick").perform()
         time.sleep(1)
         
         # Press Enter
         actions.send_keys(Keys.ENTER).perform()
         time.sleep(2)
-        
+        take_screenshot(driver, "after_sending_command")
+
         return True
 
     except Exception as e:
-        logger.error(f"Error: {str(e)}")
+        logger.error(f"Error during execution: {str(e)}\n{traceback.format_exc()}")
+        take_screenshot(driver, "error_state")
         return False
     finally:
         driver.quit()
